@@ -134,7 +134,7 @@ class Environment:
         elif self.hit:
             return -100    
         else:
-            return 1
+            return -5
 
     def isTerminal(self, state):
         return list(state) in self.goals.tolist() or state[0] > 6 or self.hit
@@ -367,7 +367,7 @@ def train(agent, env, episodes):
         # env.reset()
         env.startWithPedestrians()
         #for now we only care about figure 2
-        # env.set([3,3], [3,5], [4,2])
+        env.set([3,3], [3,5], [4,2])
         state = str(env.board)
         while not env.isTerminal(tuple(env.car)):
             action = agent.getAction(state)
@@ -404,7 +404,7 @@ agent = QLearner(alpha=0.5, gamma=0.9, epsilon=0.2, actions=actions)
 agent.load_q_table('q_table.pkl')
 # train the agent
 
-train(agent, env, episodes=5)
+train(agent, env, episodes=10)
 agent.save_q_table('q_table.pkl')
 
 
