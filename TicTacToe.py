@@ -1,5 +1,6 @@
 import random
 import copy
+import matplotlib as plt
 
 BOARD_ROWS = 3
 BOARD_COLS = 3
@@ -146,7 +147,7 @@ print("Value Iter stats!")
 UStar = valueIter(S, children, epsilon)
 print("Value Iter ends!")
 
-print("Value of Fig1: ", UStar[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
+print("Value of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
 
 
 ##############################
@@ -344,9 +345,9 @@ class TicTacToe:
 
 # uncomment below to see two random players play the game
 
-budget = 1
-i = 0
-while(i < budget):
-    tic_tac_toe = TicTacToe()
-    tic_tac_toe.start()
-    i += 1
+# budget = 1
+# i = 0
+# while(i < budget):
+#     tic_tac_toe = TicTacToe()
+#     tic_tac_toe.start()
+#     i += 1
