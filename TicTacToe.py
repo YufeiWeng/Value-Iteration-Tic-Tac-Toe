@@ -54,19 +54,25 @@ def reward(boardToString):
         return 1
 
 
-def list_valid_states(board):
+def list_valid_states(board,children):
     """
     list all possible states in the game
     """
     valid_states = {}
     #check if terminate
     if check_win(board, 'X'):
+        selfChild = {}
+        # selfChild[board_to_string(board)] = 0
         win[board_to_string(board)] = -10
-        children[board_to_string(copy.deepcopy(board))] = {}
+        children[board_to_string(copy.deepcopy(board))] = selfChild
+        S[board_to_string(board)] = 0
         return valid_states
     if check_win(board, 'O'):
+        selfChild = {}
+        # selfChild[board_to_string(board)] = 0
         win[board_to_string(board)] = 10
-        children[board_to_string(copy.deepcopy(board))] = {}
+        children[board_to_string(copy.deepcopy(board))] = selfChild
+        S[board_to_string(board)] = 0
         return valid_states
     
     num_x = sum(row.count("X") for row in board)
@@ -95,24 +101,52 @@ def valueIter(statestbl, children, epsilon):
     while True:
         delta = 0
         U = copy.deepcopy(Up)
+        print("Value of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), U[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
         for state in statestbl.keys():
             child = children[state]
-            #not empty
+            # if state == board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]]):
+            #     print("hi")
+            # if state == board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]):
+            #     print("hi")
+            # not empty
             if child:
                 max = -99999999
                 #pick a acition
                 for action in child.keys():
+                    # if action == board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]):
+                    #     print("hi")
                     sum = 0
-                    for result in children[action]:
-                        sum += 1/len(children[action])*U[result]
-                    if sum > max:
-                        max = sum
+                    board2d = [[action[i] for i in range(j * 3, (j + 1) * 3)] for j in range(3)]
+                    
+                    # if check_win(board2d,"O"):
+                    #     max = 10
+                    #     break
+                    # else:
+                    #     for result in children[action]:
+                    #         a = 1/len(children[action])
+                    #         b = U[result]
+                    #         sum += a*b
+                    #     if sum > max:
+                    #         max = sum
+
+
+                    if len(children[action]) == 0:
+                        max = U[action]
+                    else:
+                        for result in children[action]:
+                            a = 1/len(children[action])
+                            b = U[result]
+                            sum += a*b
+                        if sum > max:
+                            max = sum
+                newV = reward(state) + gamma*max
                 Up[state] = reward(state) + gamma*max
             else:
                 Up[state] = reward(state)
             if abs(Up[state] - U[state]) > delta:
                 delta = abs(Up[state] - U[state])
         print("current delta is: ", delta)
+        
         if delta < epsilon*(1-gamma)/gamma:
             break
     return U
@@ -125,7 +159,7 @@ queue = [board_to_string(board)]
 while queue:
     state = queue.pop(0)
     board2d = [[state[i] for i in range(j * 3, (j + 1) * 3)] for j in range(3)]  # Convert state to 2D list
-    valid_states = list_valid_states(board2d)
+    valid_states = list_valid_states(board2d, children)
     for valid_state in valid_states.keys():
         if valid_state not in statestbl.keys():
             statestbl[valid_state] = 0
@@ -143,13 +177,18 @@ print(board_to_string([["X", "O", "X"], ["-", "-", "-"], ["-", "-", "-"]]), "chi
 print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]])))
 print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]])))
 
+####
+print(check_win([["X","O","X"],["X","O","-"],["-","O","-"]],"O"))
+
 print("Value Iter stats!")
 UStar = valueIter(S, children, epsilon)
 print("Value Iter ends!")
 
 print("Value of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
 
-
+print("Children keys of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), children[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
+# print("Value of max children: ", board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])])
+print(len(children[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])]))
 ##############################
 #Genertator
 ##############################
