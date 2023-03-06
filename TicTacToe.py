@@ -44,12 +44,21 @@ def check_win(board, player):
     # No win found
     return False
 
+def is_board_filled(board):
+        for row in board:
+            for item in row:
+                if item == '-':
+                    return False
+        return True
+
 def reward(boardToString):
     """
     return reward of a state
     """
     if boardToString in win.keys():
         return win[boardToString]
+    elif is_board_filled([[boardToString[i] for i in range(j * 3, (j + 1) * 3)] for j in range(3)]):
+        return 0
     else:
         return 1
 

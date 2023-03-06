@@ -68,8 +68,8 @@ class Environment:
                     next_state = [row + 1, col + 1]
                 else:
                     next_state = [row + 1, col - 1]
-            
-            self.board[tuple(state)] = 0
+            if state[0] < 7:
+                self.board[tuple(state)] = 0  
             if next_state[0] < 7:
                 self.board[tuple(next_state)] = 1
             return next_state
@@ -94,7 +94,8 @@ class Environment:
                     next_state = [row + 1, col - 1]
                     path.append(next_state)
             
-            self.board[tuple(state)] = 0
+            if state[0] < 7:
+                self.board[tuple(state)] = 0
             self.car = next_state
             if next_state[0] < 7:
                 self.board[tuple(next_state)] = 1
@@ -134,7 +135,7 @@ class Environment:
         elif self.hit:
             return -100    
         else:
-            return -5
+            return 0
 
     def isTerminal(self, state):
         return list(state) in self.goals.tolist() or state[0] > 6 or self.hit
@@ -222,7 +223,7 @@ class QLearningAgent:
         self.epsilon = epsilon  # exploration rate
         self.num_actions = num_actions
         self.state_space = state_space
-        self.q_table = np.zeros((state_space[0], state_space[1], num_actions))
+        self.q_table = np.zeros((state_space[0]+1, state_space[1]+1, num_actions))
 
     def select_action(self, state):
         if np.random.uniform() < self.epsilon:
@@ -246,10 +247,13 @@ def train(agent, env, num_episodes, max_steps):
         state = np.array([row, col])
         episode_reward = 0
         for j in range(max_steps):
+            
+            done = env.isTerminal(state)
             action = agent.select_action(state)
+            reward = env.getReward(state)
             next_state = env.getNextState(state, action)
-            reward = env.getReward(next_state)
-            done = env.isTerminal(next_state)
+            # reward = env.getReward(next_state)
+            
 
             agent.update(state, action, next_state, reward, done)
 
@@ -314,116 +318,130 @@ print("Q_values for D1: ",q_table[3,3,:])
 
 
 
-# """
-# consider pedestrains
-# """
-# class QLearner:
+"""
+consider pedestrains
+"""
+class QLearner:
 
-#     def __init__(self, alpha, gamma, epsilon, actions):
-#         self.alpha = alpha
-#         self.gamma = gamma
-#         self.epsilon = epsilon
-#         self.actions = actions
-#         self.q_table = {}
+    def __init__(self, alpha, gamma, epsilon, actions):
+        self.alpha = alpha
+        self.gamma = gamma
+        self.epsilon = epsilon
+        self.actions = actions
+        self.q_table = {}
 
-#     def getQValue(self, state, action):
-#         if state not in self.q_table:
-#             self.q_table[state] = np.zeros(len(self.actions))
-#         return self.q_table[state][action]
+    def getQValue(self, state, action):
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(len(self.actions))
+        return self.q_table[state][action]
 
-#     def computeValueFromQValues(self, state):
-#         if state not in self.q_table:
-#             self.q_table[state] = np.zeros(len(self.actions))
-#         return max(self.q_table[state])
+    def computeValueFromQValues(self, state):
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(len(self.actions))
+        return max(self.q_table[state])
 
-#     def computeActionFromQValues(self, state):
-#         if state not in self.q_table:
-#             self.q_table[state] = np.zeros(len(self.actions))
-#         if random.random() < self.epsilon:
-#             return random.choice(self.actions)
-#         else:
-#             return np.argmax(self.q_table[state])
+    def computeActionFromQValues(self, state):
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(len(self.actions))
+        if random.random() < self.epsilon:
+            return random.choice(self.actions)
+        else:
+            return np.argmax(self.q_table[state])
 
-#     def getAction(self, state):
-#         return self.computeActionFromQValues(state)
+    def getAction(self, state):
+        return self.computeActionFromQValues(state)
 
-#     def update(self, state, action, next_state, reward):
-#         if state not in self.q_table:
-#             self.q_table[state] = np.zeros(len(self.actions))
-#         if next_state not in self.q_table:
-#             self.q_table[next_state] = np.zeros(len(self.actions))
-#         self.q_table[state][action] = self.q_table[state][action] + self.alpha * (reward + self.gamma * self.computeValueFromQValues(next_state))
+    def update(self, state, action, next_state, reward, done):
+        if state not in self.q_table:
+            self.q_table[state] = np.zeros(len(self.actions))
+        if done:
+            self.q_table[state][action] = self.q_table[state][action] + self.alpha * (reward - self.q_table[state][action])
+            v = self.q_table[state][action]
+            # print("state: ",state, " value: ", v, " action: ", action, " update part", self.alpha * (reward - self.q_table[state][action]))
+            return
+        if next_state not in self.q_table:
+            self.q_table[next_state] = np.zeros(len(self.actions))
+  
+        a = self.q_table[state][action]
+        b = self.computeValueFromQValues(next_state) 
+        newV = self.q_table[state][action] + self.alpha * (reward + self.gamma * self.computeValueFromQValues(next_state)-self.q_table[state][action])
+        self.q_table[state][action] += self.alpha * (reward + self.gamma * self.computeValueFromQValues(next_state)-self.q_table[state][action])
     
-#     def save_q_table(self, filename):
-#         with open(filename, 'wb') as f:
-#             pickle.dump(self.q_table, f)
+    def save_q_table(self, filename):
+        with open(filename, 'wb') as f:
+            pickle.dump(self.q_table, f)
     
-#     def load_q_table(self, filename):
-#         with open(filename, 'rb') as f:
-#             self.q_table = pickle.load(f)
+    def load_q_table(self, filename):
+        with open(filename, 'rb') as f:
+            self.q_table = pickle.load(f)
 
-# def train(agent, env, episodes):
-#     for episode in range(episodes):
-#         # env.reset()
-#         env.startWithPedestrians()
-#         #for now we only care about figure 2
-#         env.set([3,3], [3,5], [4,2])
-#         state = str(env.board)
-#         while not env.isTerminal(tuple(env.car)):
-#             action = agent.getAction(state)
-#             env.getNextState(tuple(env.car), action)
-#             next_state = str(env.board)
-#             reward = env.getReward(tuple(env.car))
-#             agent.update(state, action, next_state, reward)
-#             state = next_state
-#         print("episode: ", episode)
+def train(agent, env, episodes):
+    for episode in range(episodes):
+        # env.reset()
+        env.startWithPedestrians()
+        #for now we only care about figure 2
+        env.set([3,3], [3,5], [4,2])
+        state = str(env.board)
+        while True:
+            # print(state)
+            done = env.isTerminal(tuple(env.car))
+            reward = env.getReward(tuple(env.car))
+            action = agent.getAction(state)
+            env.getNextState(tuple(env.car), action)
+            next_state = str(env.board)
+            # reward = env.getReward(tuple(env.car))
+            agent.update(state, action, next_state, reward, done)
+            state = next_state
+            if done:
+                break
+        print("episode: ", episode)
 
 
-# # def test(agent, env):
-# #     env.reset()
-# #     env.startWithPedestrians()
-# #     state = tuple(env.car)
-# #     while not env.isTerminal(state):
-# #         action = agent.computeActionFromQValues(state)
-# #         next_state = tuple(env.getNextState(list(state), action))
-# #         reward = env.getReward(next_state)
-# #         state = next_state
-# #         env.visualize_board
-# #         if reward == -100:
-# #             print("The agent hit a pedestrian")
-# #             break
-# #         elif reward == 100:
-# #             print("The agent successfully crossed the road!")
-# #             break
+# def test(agent, env):
+#     env.reset()
+#     env.startWithPedestrians()
+#     state = tuple(env.car)
+#     while not env.isTerminal(state):
+#         action = agent.computeActionFromQValues(state)
+#         next_state = tuple(env.getNextState(list(state), action))
+#         reward = env.getReward(next_state)
+#         state = next_state
+#         env.visualize_board
+#         if reward == -100:
+#             print("The agent hit a pedestrian")
+#             break
+#         elif reward == 100:
+#             print("The agent successfully crossed the road!")
+#             break
 
-# # set up environment and agent
-# env = Environment()
-# env.startWithPedestrians()
-# actions = [0, 1, 2]
-# agent = QLearner(alpha=0.5, gamma=0.9, epsilon=0.2, actions=actions)
+# set up environment and agent
+env = Environment()
+env.startWithPedestrians()
+actions = [0, 1, 2]
+agent = QLearner(alpha=0.5, gamma=0.9, epsilon=0.01, actions=actions)
 # agent.load_q_table('q_table.pkl')
-# # train the agent
+# train the agent
 
-# train(agent, env, episodes=10)
+train(agent, env, episodes=5000)
 # agent.save_q_table('q_table.pkl')
 
 
-# # test the agent
-# # test(agent, env)
-# condition = np.zeros((7, 8))
-# condition[3,3] = 1
-# condition[3,5] = 2
-# condition[4,2] = 2
+# test the agent
+# test(agent, env)
+condition = np.zeros((7, 8))
+condition[3,3] = 1
+condition[3,5] = 2
+condition[4,2] = 2
 
-# print("Count:", len(agent.q_table.keys()))
-# print("Figure2: ")
-# print(str(condition))
-# # print("Example key: ")
-# # print(list(agent.q_table.keys())[1])
+print("Count:", len(agent.q_table.keys()))
+print("Figure2: ")
+print(str(condition))
+# print("Example key: ")
+# print(list(agent.q_table.keys())[1])
 
-# # Qvalues = agent.q_table[list(agent.q_table.keys())[1]]
-# if str(condition) in agent.q_table.keys():
-#     Qvalues = agent.q_table[str(condition)]
-#     print(Qvalues)
-# else:
-#     print("Doesn't exist")
+# Qvalues = agent.q_table[list(agent.q_table.keys())[1]]
+if str(condition) in agent.q_table.keys():
+    Qvalues = agent.q_table[str(condition)]
+    print(Qvalues)
+else:
+    print("Doesn't exist")
