@@ -1,6 +1,7 @@
 import random
 import copy
-import matplotlib as plt
+import matplotlib.pyplot as plt
+import numpy as np
 
 BOARD_ROWS = 3
 BOARD_COLS = 3
@@ -105,12 +106,14 @@ def valueIter(statestbl, children, epsilon):
     """
     perform Value iteration
     """
+    x = []
     U = statestbl
     Up = copy.deepcopy(statestbl)
     while True:
         delta = 0
         U = copy.deepcopy(Up)
         print("Value of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), U[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
+        x.append(U[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
         for state in statestbl.keys():
             child = children[state]
             # if state == board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]]):
@@ -158,6 +161,11 @@ def valueIter(statestbl, children, epsilon):
         
         if delta < epsilon*(1-gamma)/gamma:
             break
+
+    # plt.plot(np.arange(len(x)), x)
+    # plt.xlabel("Iterations")
+    # plt.ylabel("Value of Figure 1")
+    # plt.show()
     return U
 
 
@@ -180,24 +188,26 @@ while queue:
 print("statestbl has: ", len(statestbl))
 print("children has: ",len(children))
 print("S has: ",len(S))
-print(str([["-", "X", "O"], ["-", "-", "-"], ["-", "-", "-"]]), "inital value is: ", statestbl[board_to_string([["-", "X", "-"], ["-", "-", "-"], ["-", "-", "-"]])])
-print(board_to_string([["X", "O", "X"], ["-", "-", "-"], ["-", "-", "-"]]), "children: ", children[board_to_string([["X", "O", "X"], ["-", "-", "-"], ["-", "-", "-"]])])
-# print(len(children[board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]])]))
-print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]])))
-print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]])))
+# print(str([["-", "X", "O"], ["-", "-", "-"], ["-", "-", "-"]]), "inital value is: ", statestbl[board_to_string([["-", "X", "-"], ["-", "-", "-"], ["-", "-", "-"]])])
+# print(board_to_string([["X", "O", "X"], ["-", "-", "-"], ["-", "-", "-"]]), "children: ", children[board_to_string([["X", "O", "X"], ["-", "-", "-"], ["-", "-", "-"]])])
+# # print(len(children[board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]])]))
+# print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["X", "-", "-"]])))
+# print("reward of ", board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]]), reward(board_to_string([["X", "O", "-"], ["X", "O", "-"], ["-", "-", "-"]])))
 
 ####
-print(check_win([["X","O","X"],["X","O","-"],["-","O","-"]],"O"))
+# print(check_win([["X","O","X"],["X","O","-"],["-","O","-"]],"O"))
 
 print("Value Iter stats!")
 UStar = valueIter(S, children, epsilon)
 print("Value Iter ends!")
 
-print("Value of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
+# state = board_to_string([["X","O","X"],["X","O","-"],["-","O","-"]])
+state = "X-O-X-OX-"
+print("Value: ", state, UStar[state])
 
-print("Children keys of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), children[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
-# print("Value of max children: ", board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])])
-print(len(children[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])]))
+# print("Children keys of Fig1: ", board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]]), children[board_to_string([["X", "-", "X"], ["O", "O", "-"], ["X", "-", "-"]])])
+# # print("Value of max children: ", board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]]), UStar[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])])
+# print(len(children[board_to_string([["X", "-", "X"], ["O", "O", "O"], ["X", "-", "-"]])]))
 ##############################
 #Genertator
 ##############################
@@ -343,14 +353,17 @@ class TicTacToe:
     def start(self):
 
         self.create_board()
-       
+        states = []
         player = 'X'
+        num = 0
+        print("Start!")
         while True:
-
+            
+            
             self.history.append(copy.deepcopy(self.board))
 
             if player == 'X':
-                print(f"Opponent turn")
+                # print(f"Opponent turn")
                 row, col = self.randomMove()
                 self.fix_spot(self.board, row - 1, col - 1, player)
 
@@ -359,33 +372,43 @@ class TicTacToe:
                 print("Your turn. You play: ", row, col)
                 self.fix_spot(self.board, row - 1, col - 1, player)
 
-            self.show_board()
-            self.show_board_to_string()
+            # if num == 0:
+            #     self.show_board()
+            # self.show_board_to_string()
             # print("R:", self.getReward(player))
             print("\n")
-            
+            if player == 'X':
+                self.show_board()
+                self.show_board_to_string()
+                states.append(self.board)
 
             # checking whether current player is won or not
             if self.is_player_win(player):
                 
                 if player == 'X':
+                    print()
                     print(f"Opponent wins the game!")
+                    self.show_board()
                     # self.updateStateValue(-10)
                 else:
+                    print()
                     print(f"You win the game!")
+                    self.show_board()
                     # self.updateStateValue(10)
                 break
 
             # checking whether the game is draw or not
             if self.is_board_filled():
+                print()
                 print("Match Draw!")
+                self.show_board()
                 # self.updateStateValue(1)
                 break
 
             # swapping the turn
             player = self.swap_player_turn(player)
-            reward = 1  
-
+            num += 1 
+        return states
         # showing the final view of board
         # self.show_board_to_string()
         
@@ -395,7 +418,10 @@ class TicTacToe:
 
 # budget = 1
 # i = 0
+# trajs = []
 # while(i < budget):
 #     tic_tac_toe = TicTacToe()
-#     tic_tac_toe.start()
+#     traj = tic_tac_toe.start()
+#     trajs.append(traj)
 #     i += 1
+#     print(traj)

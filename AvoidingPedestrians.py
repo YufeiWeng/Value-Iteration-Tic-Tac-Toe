@@ -52,7 +52,7 @@ class Environment:
 
     def getNextState(self, state, action):
         row, col = state
-        #if we don't consider pedestrains
+        #if we don't consider pedestrians
         if not self.pedestrianL and not self.pedestrianR:
             if action == 0:  # move down by 1
                 next_state = [row + 1, col]
@@ -313,13 +313,16 @@ for row in range(state_space[0]-1):
     print("-" * 10)
 print("| P1 | P2 |")
 
-print("Q_values for D1: ",q_table[3,3,:])
+print("Q_values for D1(3,3): ")
+print("action: 0: ", q_table[3,3,0])
+print("action: 1: ", q_table[3,3,1])
+print("action: 2: ", q_table[3,3,2])
 
 
 
 
 """
-consider pedestrains
+consider pedestrians
 """
 class QLearner:
 
@@ -380,7 +383,7 @@ def train(agent, env, episodes):
         # env.reset()
         env.startWithPedestrians()
         #for now we only care about figure 2
-        env.set([3,3], [3,5], [4,2])
+        # env.set([3,3], [3,5], [4,2])
         state = str(env.board)
         while True:
             # print(state)
@@ -419,11 +422,11 @@ env = Environment()
 env.startWithPedestrians()
 actions = [0, 1, 2]
 agent = QLearner(alpha=0.5, gamma=0.9, epsilon=0.01, actions=actions)
-# agent.load_q_table('q_table.pkl')
+agent.load_q_table('q_table.pkl')
 # train the agent
 
-train(agent, env, episodes=5000)
-# agent.save_q_table('q_table.pkl')
+train(agent, env, episodes=100000000000)
+agent.save_q_table('q_table.pkl')
 
 
 # test the agent
@@ -442,6 +445,9 @@ print(str(condition))
 # Qvalues = agent.q_table[list(agent.q_table.keys())[1]]
 if str(condition) in agent.q_table.keys():
     Qvalues = agent.q_table[str(condition)]
-    print(Qvalues)
+    print( "the Q-values for the car at the cell labeled as D1 when the R-Row pedestrian is at E1 and the L-Row pedestrian120 is at E2: ")
+    print("action 0: ", Qvalues[0])
+    print("action 1: ", Qvalues[1])
+    print("action 2: ", Qvalues[2])
 else:
     print("Doesn't exist")
